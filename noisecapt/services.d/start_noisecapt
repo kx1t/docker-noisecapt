@@ -22,7 +22,7 @@ echo "[$APPNAME][$(date)] Socket30003 deployment started"
 # LOOPTIME is the time between two runs of noisecapt (in seconds)
 # Since Noisecapt.sh already runs forever by itself, noisecapt is the time between a failure of the script, and
 # the system trying to re-start it. This can safely be set to a few seconds.
-LOOPTIME=30
+LOOPTIME=10s
 #
 # NOISECAPTDIR contains the directory where noisecapt.sh is location
 NOISECAPTDIR=/usr/share/planefence
@@ -30,6 +30,8 @@ NOISECAPTDIR=/usr/share/planefence
 
 while true
 do
-	$NOISECAPTDIR/noisecapt.sh >/tmp/noisecapt.log
+	$NOISECAPTDIR/noisecapt.sh >/run/noisecapt/noisecapt.log
+	cho "[$APPNAME][$(date)] Noisecapt has exited unexpectedly... restarting in $LOOPTIME"
 	sleep $LOOPTIME
+	echo "[$APPNAME][$(date)] Noisecapt restarting now"
 done

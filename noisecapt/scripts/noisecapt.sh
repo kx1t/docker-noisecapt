@@ -30,9 +30,9 @@ echo "[$APPNAME][$(date)] PlaneFence deployment started"
 # including the directory. Please make sure that this directory is accessable
 # for the script as it won't attempt to create or CHMOD it. If the script
 # can't write to the directory, it will silently fail / appear to do nothing
-        OUTFILE="/var/www/noisecapt-"
+        OUTFILE="/run/noisecapt/noisecapt-"
         OUTFILEEXT=".log"
-        TEMPFILE="/tmp/noisecapt.tmp"
+        TEMPFILE="/run/noisecapt/noisecapt.tmp"
 # If you don't want logging, simply set  the VERBOSE=1 line below to VERBOSE=0
         VERBOSE=1
         LOGFILE=/dev/stdout
