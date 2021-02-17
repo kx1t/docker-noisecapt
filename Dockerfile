@@ -17,8 +17,6 @@ RUN set -x && \
 # define packages needed for installation and general management of the container:
     TEMP_PACKAGES=() && \
     KEPT_PACKAGES=() && \
-    KEPT_PIP_PACKAGES=() && \
-    KEPT_RUBY_PACKAGES=() && \
     # Required for building multiple packages.
     # TEMP_PACKAGES+=(build-essential) && \
     TEMP_PACKAGES+=(pkg-config) && \
@@ -41,20 +39,12 @@ RUN set -x && \
     KEPT_PACKAGES+=(procps nano aptitude netcat) && \
 #
 # define packages needed for PlaneFence, including socket30003
-    KEPT_PACKAGES+=(python-pip) && \
-    KEPT_PACKAGES+=(python-numpy) && \
-    KEPT_PACKAGES+=(python-pandas) && \
-    KEPT_PACKAGES+=(python-dateutil) && \
     KEPT_PACKAGES+=(jq) && \
     KEPT_PACKAGES+=(bc) && \
-    KEPT_PACKAGES+=(gnuplot-nox) && \
     KEPT_PACKAGES+=(lighttpd) && \
-    KEPT_PACKAGES+=(perl) && \
     KEPT_PACKAGES+=(iputils-ping) && \
-    KEPT_PACKAGES+=(ruby) && \
     KEPT_PACKAGES+=(alsa-utils) && \
-    KEPT_PIP_PACKAGES+=(tzlocal) && \
-    KEPT_RUBY_PACKAGES+=(twurl) && \
+    KEPT_PACKAGES+=(sox) && \
 #
 # Install all these packages:
     apt-get update && \

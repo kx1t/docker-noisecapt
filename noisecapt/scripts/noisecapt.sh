@@ -1,3 +1,9 @@
+#!/usr/bin/with-contenv bash
+#shellcheck shell=bash
+
+APPNAME="noisecapt"
+
+echo "[$APPNAME][$(date)] PlaneFence deployment started"
 #!/bin/bash
 # NOISECAPT - a Bash shell script to continuously capture audio levels from a standard audio device
 #
@@ -19,17 +25,17 @@
 # Feel free to make changes to the variables between these two lines. However, it is# STRONGLY RECOMMENDED to RTFM! See README.md for explanation of what these do.
 #
 # CAPTURETIME is the duration of a single audio capture, in seconds
-        CAPTURETIME=5
+[[ "x$PF_CAPTURETIME" == "x" ]] && CAPTURETIME=5 || CAPTURETIME=$PF_CAPTURETIME
 # OUTFILE contains the base part of the output file for the captured data,
 # including the directory. Please make sure that this directory is accessable
 # for the script as it won't attempt to create or CHMOD it. If the script
 # can't write to the directory, it will silently fail / appear to do nothing
-        OUTFILE="/tmp/noisecapt-"
+        OUTFILE="/var/www/noisecapt-"
         OUTFILEEXT=".log"
         TEMPFILE="/tmp/noisecapt.tmp"
 # If you don't want logging, simply set  the VERBOSE=1 line below to VERBOSE=0
         VERBOSE=1
-        LOGFILE=/tmp/noisecapt.log
+        LOGFILE=/dev/stdout
 # The script will attempt to figure out by itself what your audio device is
 # However, it may get it wrong, especially if you have more than
 # 1 soundcard ,webcam, etc
@@ -48,7 +54,7 @@ LOG ()
 {
         if [ "$VERBOSE" == "1" ];
         then
-                printf "%s: %s\n" "$(date)" "$1" >> $LOGFILE
+                echo "[$APPNAME][$(date)] $1"
         fi
 }
 
@@ -56,12 +62,14 @@ LOG "---------------------------------------------------------------------------
 LOG "Starting NoiseCapt"
 
 # Try to get the card/device for the audio input device
-if [ "x$CARD" != "x" ]
+if [ "x$FP_AUDIOCARD" == "x" ]
 then
 	CARD=$(arecord -l |grep -oP "card\s+\K\w+")
 	DEVICE=$(arecord -l |grep -oP "device\s+\K\w+")
 	LOG "Audio device Card,Device auto-set to \"$CARD,$DEVICE\""
 else
+  CARD=$PF_AUDIOCARD
+  DEVICE=$FP_AUDIODEVICE
 	LOG "Audio device Card,Device manually set to \"$CARD,$DEVICE\""
 fi
 
