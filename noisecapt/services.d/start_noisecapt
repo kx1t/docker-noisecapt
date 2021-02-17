@@ -25,13 +25,13 @@ echo "[$APPNAME][$(date)] Socket30003 deployment started"
 LOOPTIME=10s
 #
 # NOISECAPTDIR contains the directory where noisecapt.sh is location
-NOISECAPTDIR=/usr/share/planefence
+NOISECAPTDIR=/usr/share/noisecapt
 # -----------------------------------------------------------------------------------
 
 while true
 do
 	$NOISECAPTDIR/noisecapt.sh >/run/noisecapt/noisecapt.log
-	cho "[$APPNAME][$(date)] Noisecapt has exited unexpectedly... restarting in $LOOPTIME"
+	echo "[$APPNAME][$(date)] Noisecapt has exited unexpectedly... restarting in $LOOPTIME"
 	sleep $LOOPTIME
 	echo "[$APPNAME][$(date)] Noisecapt restarting now"
 done
