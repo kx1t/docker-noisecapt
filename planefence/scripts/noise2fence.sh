@@ -2,7 +2,7 @@
 # NOISE2FENCE -- a script for extracting recorded noise values from NOISECAPT
 # and adding them to CSV files that have been created by PlaneFence
 #
-# Copyright 2020 Ramon F. Kolb - licensed under the terms and conditions
+# Copyright 2020,2021 Ramon F. Kolb - licensed under the terms and conditions
 # of GPLv3. The terms and conditions of this license are included with the Github
 # distribution of this package, and are also available here:
 # https://github.com/kx1t/planefence/
@@ -15,7 +15,7 @@
 # Feel free to make changes to the variables between these two lines. However, it is
 # STRONGLY RECOMMENDED to RTFM! See README.md for explanation of what these do.
 #
-CSVDIR=/usr/share/planefence/html
+CSVDIR=/usr/share/dump1090-fa/html/planefence
 CSVNAMEBASE=$CSVDIR/planefence-
 CSVNAMEEXT=".csv"
 LOGNAMEBASE=/tmp/noisecapt-
@@ -28,26 +28,9 @@ VERBOSE=1
 # Additional variables:
 CURRENT_PID=$$
 PROCESS_NAME=$(basename $0)
-VERSION=0.1-docker
+VERSION=0.1
 # -----------------------------------------------------------------------------------
 #
-# If you want to read a remote file, please do the following:
-# ON THIS MACHINE, as user 'pi':
-# - if it doesn't already exist, create ~/.ssh and cd into that directory
-# - if ~/.ssh/id_rsa.pub doesn't already exist, then type this command: ssh-keygen -t rsa -C "pi@PIAWARE"
-# - Copy ~/.ssh/id_rsa.pub to the remote machine (replace 10.0.0.161 with the IP or DNS of the remote machine): scp ~/.ssh/id_rsa.pub pi@10.0.0.161:/tmp/id_rsa.pub
-# ON THE REMOTE MACHINE, as user 'pi':
-# - if it doesn't already exist, create ~/.ssh and cd into that directory
-# - Add the file you copied to your authorized keys: cp /tmp/id_rsa.pub >> ~/.ssh/authorized_keys ; rm /tmp/id_rsa.pub
-# - make sure you set the right permissions:
-#   chmod 0700 ~/.ssh
-#   chmod 0600 ~/.ssh/authorized_keys
-# Last, configure the REMOTELOG parameter with the username and IP address of the remote account:
-#
-# If you do NOT want remote access, simply comment out the REMOTELOG line below.
-# REMOTELOG=pi@10.0.0.161
-
-
 # First create an function to write to the log
 LOG ()
 {	if [ "$VERBOSE" != "" ]
@@ -66,16 +49,7 @@ fi
 
 CSVFILE=$CSVNAMEBASE$NOISEDATE$CSVNAMEEXT
 # CSVFILE=/tmp/noise.csv
-
-if [ "$REMOTELOG" != "" ]
-then
-	scp $REMOTELOG:$LOGNAMEBASE$NOISEDATE$LOGNAMEEXT $LOGNAMEBASE$NOISEDATE$LOGNAMEEXT.tmp
-	mv -f $LOGNAMEBASE$NOISEDATE$LOGNAMEEXT.tmp $LOGNAMEBASE$NOISEDATE$LOGNAMEEXT
-	LOG "Got $LOGNAMEBASE$NOISEDATE$LOGNAMEEXT from $REMOTELOG"
-fi
-
 NOISEFILE=$LOGNAMEBASE$NOISEDATE$LOGNAMEEXT
-
 
 # make sure there's no stray TMP file around, so we can directly append
 [ -f "$CSVTMP" ] && rm "$CSVTMP"
@@ -90,7 +64,7 @@ if [ -f "$CSVFILE" ]
 then
 	# Clean the  $CSVFILE first
 #	cat "$CSVFILE" | tr -d '\r' >/tmp/noisetmp.tmp
-#	mv /tmp/noisetmp.tmp "$CSVFILE"
+#	mv /tmp/noisetmp.tmp "$CSVFILE" 
 	while read CSVLINE
 	do
 		XX=$(echo -n $CSVLINE | tr -d '[:cntrl:]')
