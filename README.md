@@ -16,12 +16,46 @@ The Docker container can be accessed on [Dockerhub (kx1t/noisecapt)](https://hub
 
 ## Who is it for?
 
+If you are already running a ADS-B Feeder station with the containerized version of [PlaneFence](http://www.github.com/kx1t/docker-planefence), and you are interested in adding audio level measurements to your station, this container may be of interest to you.
+It basically "listens" to audio from an audio card/dongle connected to your Raspberry Pi and integrates the output with the [PlaneFence](http://www.github.com/kx1t/docker-planefence) application.
+
+Note that this container on itself does not have user-visible output. All output is integrated with [PlaneFence](http://www.github.com/kx1t/docker-planefence).
 
 ## Deploying `docker-planefence`
 
+### Hardware requirements and considerations
+
+#### Same or different Raspberry Pi?
+NoiseCapt continuously listen for, and processes audio from a soundcard. This can become quite processor-intensive and you may run into the limits of what a Raspberry Pi can handle if you also run multiple RTL-SDR dongles and instances of dump1090(-fa)/readsb at the same time. As such, you can choose to run NoiseCapt on the same Raspberry Pi or you can put it on a separate Raspberry Pi or other machine.
+
+#### Sound Card for your Raspberry Pi
+- The RPi does not come with a sound card or microphone input. Any cheap devices will work. For example, I've used [this](https://www.amazon.com/dp/B077RBJXP8) card successfully.
+- You should connect it to an external microphone. Any small lapel / lavallier microphone should do. Note that for the sound card mentioned above, you'd need a 3.5mm mono plug (and not a mobile phone headset plug) on the cable. I've had success with [this](https://www.amazon.com/dp/B015KY5J7Y) one.
+- You need to hang the microphone outside, preferably near your antenna and away from other noise sources (like air conditioner units). Make sure to waterproof the microphone. It's OK to completely seal it in a plastic bag, as long as you regularly check for deterioration of the bag caused by UV light.
+
+
+### Configuration for deployments on the same machine as [PlaneFence](http://www.github.com/kx1t/docker-planefence)
+- Take a look at the [`docker-compose.yml`](https://github.com/kx1t/docker-noisecapt/blob/main/docker-compose.yml) file. Copy the relevant parts over to PlaneFence's `docker-compose.yml` file.
+- In the directory where PlaneFence's `docker-compose.yml` file is located, please edit `.env` to enable the PF_NOISECAPT variable. Instructions on what to set it to can be found in the [example `.env` file](https://github.com/kx1t/docker-planefence/blob/main/.env-example)
+
+### Configuration for deployments on different machines
+- Take a look at the [`docker-compose.yml`](https://github.com/kx1t/docker-noisecapt/blob/main/docker-compose.yml) file and edit it to your liking. Copy it on the host machine to (for example) `/opt/noisecapt`
+- In `docker-compose.yml`, make sure you uncomment the `ports:` section. By default, it exposes the NoiseCapt files through a web interface on port 30088. You can change this to another port of your liking.
+- In the `/opt/planefence` directory of the machine where you run PlaneFence, edit `.env` and make sure to set the PF_NOISECAPT variable to the URL of your exposed port, for example "http://my.ip:30088/". Instructions on what to set it to can be also found in the [example `.env` file](https://github.com/kx1t/docker-planefence/blob/main/.env-example).
 
 ## Advanced configuration
-
+- NoiseCapt will attempt to automatically identify your audio card, but sometimes it can get confused. If you have multiple audio cards on your system (which is often the case on larger machines), it will pick the first one it can find. If this is not what you want, you can manually configure which audio card to pick. Here's how it works:
+1. Deploy the NoiseCapt container. It's OK if things aren't working (yet)
+2. From the host machine, give this command: `docker exec -t noisecapt arecord -l`
+3. The output will look like this:
+`**** List of CAPTURE Hardware Devices ****
+card 2: Device [USB PnP Sound Device], device 0: USB Audio [USB Audio]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+`
+4. Note that your Audio Card = 2 and your Audio Device = 0 in this case
+5. Update your `docker-compose.yml` file and uncomment / enter these values at the lines with `PF_AUDIOCARD=` and `PF_AUDIODEVICE=`
+6. Restart your container (`docker-compose up -d`)
 
 ### Build your own container
 This repository contains a Dockerfile that can be used to build your own.

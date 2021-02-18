@@ -1,3 +1,9 @@
+#!/usr/bin/with-contenv bash
+#shellcheck shell=bash
+
+APPNAME="noisecapt"
+
+echo "[$APPNAME][$(date)] PlaneFence deployment started"
 #!/bin/bash
 # NOISECAPT - a Bash shell script to continuously capture audio levels from a standard audio device
 #
@@ -6,7 +12,7 @@
 #
 # This script is distributed as part of the PlaneFence package.
 #
-# Copyright 2020 Ramon F. Kolb - licensed under the terms and conditions
+# Copyright 2020,2021 Ramon F. Kolb - licensed under the terms and conditions
 # of GPLv3. The terms and conditions of this license are included with the Github
 # distribution of this package, and are also available here:
 # https://github.com/kx1t/planefence
@@ -19,17 +25,17 @@
 # Feel free to make changes to the variables between these two lines. However, it is# STRONGLY RECOMMENDED to RTFM! See README.md for explanation of what these do.
 #
 # CAPTURETIME is the duration of a single audio capture, in seconds
-        CAPTURETIME=5
+[[ "x$PF_CAPTURETIME" == "x" ]] && CAPTURETIME=5 || CAPTURETIME=$PF_CAPTURETIME
 # OUTFILE contains the base part of the output file for the captured data,
 # including the directory. Please make sure that this directory is accessable
 # for the script as it won't attempt to create or CHMOD it. If the script
 # can't write to the directory, it will silently fail / appear to do nothing
-        OUTFILE="/tmp/noisecapt-"
+        OUTFILE="/run/noisecapt/noisecapt-"
         OUTFILEEXT=".log"
-        TEMPFILE="/tmp/noisecapt.tmp"
+        TEMPFILE="/run/noisecapt/noisecapt.tmp"
 # If you don't want logging, simply set  the VERBOSE=1 line below to VERBOSE=0
-        VERBOSE=0
-        LOGFILE=/tmp/noisecapt.log
+        VERBOSE=1
+        LOGFILE=/dev/stdout
 # The script will attempt to figure out by itself what your audio device is
 # However, it may get it wrong, especially if you have more than
 # 1 soundcard ,webcam, etc
@@ -48,7 +54,7 @@ LOG ()
 {
         if [ "$VERBOSE" == "1" ];
         then
-                printf "%s: %s\n" "$(date)" "$1" >> $LOGFILE
+                echo "[$APPNAME][$(date)] $1"
         fi
 }
 
@@ -56,12 +62,14 @@ LOG "---------------------------------------------------------------------------
 LOG "Starting NoiseCapt"
 
 # Try to get the card/device for the audio input device
-if [ -z "$CARD" ]
+if [ "x$FP_AUDIOCARD" == "x" ]
 then
 	CARD=$(arecord -l |grep -oP "card\s+\K\w+")
 	DEVICE=$(arecord -l |grep -oP "device\s+\K\w+")
 	LOG "Audio device Card,Device auto-set to \"$CARD,$DEVICE\""
 else
+  CARD=$PF_AUDIOCARD
+  DEVICE=$FP_AUDIODEVICE
 	LOG "Audio device Card,Device manually set to \"$CARD,$DEVICE\""
 fi
 
@@ -85,16 +93,21 @@ do
         	LOG "Yesterday log doesnt exist"
 	fi
 
+  AUDIOTIME=$(date +%s)
+
         # capture audio and put the results in an array
         # All dB levels are dBFS, or dB where the loudest (="full scale") is 0 dB
+
         # RMSREC="$(arecord -D hw:$CARD,$DEVICE -d $CAPTURETIME --fatal-errors --buffer-size=192000 -f dat -t raw -c 1 --quiet | sox -V -t raw -b 16 -r 48 -c 1 -e signed-integer - -t raw -b 16 -r 48 -c 1 /dev/null stats 2>&1 | grep 'RMS lev dB')"
-	RMSREC="$(arecord -D hw:$CARD,$DEVICE -d $CAPTURETIME --fatal-errors --buffer-size=192000 -f dat -t raw -c 1 --quiet | sox -V -t raw -b 16 -r 48000 -c 1 -e signed-integer - -t raw -b 16 -r 48000 -c 1 -e signed-integer - sinc -n 4096 1500-9000 2>/dev/null | sox -V -t raw -b 16 -r 48000 -c 1 -e signed-integer - -t raw -b 16 -r 48000 -c 1 /dev/null stats 2>&1 |grep 'RMS lev dB')"
+        # RMSREC="$(arecord -D hw:$CARD,$DEVICE -d $CAPTURETIME --fatal-errors --buffer-size=192000 -f dat -t raw -c 1 --quiet | sox -V -t raw -b 16 -r 48000 -c 1 -e signed-integer - -t raw -b 16 -r 48000 -c 1 -e signed-integer - sinc -n 4096 1500-9000 2>/dev/null | sox -V -t raw -b 16 -r 48000 -c 1 -e signed-integer - -t raw -b 16 -r 48000 -c 1 /dev/null stats 2>&1 |grep 'RMS lev dB')"
+	RMSREC=$(arecord -D hw:$CARD,$DEVICE -d 5 --fatal-errors --buffer-size=192000 -f dat -t raw -c 1 --quiet | sox -V -t raw -b 16 -r 48000 -c 1 -e signed-integer - -n sinc 200-10000 stats rate 16000 spectrogram -o "$OUTFILE"spectro-`date -d @$AUDIOTIME +%y%m%d-%H%M%S`.png  -Z -10 -z 60 -t "Audio Spectrogram for `date -d @$AUDIOTIME`" -c "PlaneFence (C) 2020,2021 by kx1t" -p 1 2>&1 | grep 'RMS lev dB')
 	IFS=' ' read -a RMS <<< "$RMSREC"
 
 	# put the dB value into LEVEL as an integer. BASH arithmatic doesn't like
 	# float values, so we need to do some trickery to convert the number:
 	LC_ALL=C printf -v LEVEL '%.0f' "${RMS[3]}"
-        AUDIOTIME=$(date +%s)
+        # LEVEL=${RMS[3]}
+	LOG "Level=$LEVEL Audiotime=$AUDIOTIME"
         # capture and calculate the averages
         # determine the number of records in today's log
         if [ -f "$LOGTODAY" ]
@@ -104,6 +117,7 @@ do
         else
                 LOGLINES=0
         fi
+	LOG "Today's log has $LOGLINES lines"
 
         # create a TMP file with the records we need
         if [ "$ONEHOUR" -gt $LOGLINES ]
@@ -186,5 +200,11 @@ do
 
         # Now we have all the averages, we can write them to the file
         printf "%s,%s,%s,%s,%s,%s\n" "$AUDIOTIME" "$LEVEL" "$ONEMINAVG" "$FIVEMINAVG" "$TENMINAVG" "$ONEHRAVG" >> $LOGTODAY
+
+	# Link latest spectrogram to PNG file
+	ln -sf "$OUTFILE"spectro-`date -d @$AUDIOTIME +%y%m%d-%H%M%S`.png "$OUTFILE"spectro-latest.png
+	LOG "ln -sf "$OUTFILE"spectro-`date -d @$AUDIOTIME +%y%m%d-%H%M%S`.png "$OUTFILE"/spectro-latest.png"
+	# Last - clean up any PNG spectrograms older than 12 hours (720 minutes):
+	find "$OUTFILE"spectro-*.png -maxdepth 1 -mmin +720 -delete
 
 done
