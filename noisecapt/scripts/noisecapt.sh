@@ -101,12 +101,17 @@ do
         # RMSREC="$(arecord -D hw:$CARD,$DEVICE -d $CAPTURETIME --fatal-errors --buffer-size=192000 -f dat -t raw -c 1 --quiet | sox -V -t raw -b 16 -r 48 -c 1 -e signed-integer - -t raw -b 16 -r 48 -c 1 /dev/null stats 2>&1 | grep 'RMS lev dB')"
         # RMSREC="$(arecord -D hw:$CARD,$DEVICE -d $CAPTURETIME --fatal-errors --buffer-size=192000 -f dat -t raw -c 1 --quiet | sox -V -t raw -b 16 -r 48000 -c 1 -e signed-integer - -t raw -b 16 -r 48000 -c 1 -e signed-integer - sinc -n 4096 1500-9000 2>/dev/null | sox -V -t raw -b 16 -r 48000 -c 1 -e signed-integer - -t raw -b 16 -r 48000 -c 1 /dev/null stats 2>&1 |grep 'RMS lev dB')"
 	RMSREC=$(arecord -D hw:$CARD,$DEVICE -d 5 --fatal-errors --buffer-size=192000 -f dat -t raw -c 1 --quiet 2>/dev/null | sox -V -t raw -b 16 -r 48000 -c 1 -e signed-integer - -n sinc 200-10000 stats rate 16000 spectrogram -o "$OUTFILE"spectro-`date -d @$AUDIOTIME +%y%m%d-%H%M%S`.png  -Z -10 -z 60 -t "Audio Spectrogram for `date -d @$AUDIOTIME`" -c "PlaneFence (C) 2020,2021 by kx1t" -p 1 2>&1 | grep 'RMS lev dB')
-	IFS=' ' read -a RMS <<< "$RMSREC"
-
 	# put the dB value into LEVEL as an integer. BASH arithmatic doesn't like
 	# float values, so we need to do some trickery to convert the number:
-	LC_ALL=C printf -v LEVEL '%.0f' "${RMS[3]}"
-        # LEVEL=${RMS[3]}
+	LC_ALL=C printf -v LEVEL '%.0f' "${RMSREC##* }"
+
+  # check if $LEVEL is less than zero. If it's zero, there was a read error and we should skip.
+  if [[ "$LEVEL" == "0" ]]
+  then
+    echo "Zero sample - skipping"
+    continue
+  fi
+  
 	LOG "Level=$LEVEL Audiotime=$AUDIOTIME"
         # capture and calculate the averages
         # determine the number of records in today's log
