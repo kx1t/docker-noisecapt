@@ -19,6 +19,8 @@ echo "[$APPNAME][$(date)] Socket30003 deployment started"
 # Feel free to make changes to the variables between these two lines. However, it is
 # STRONGLY RECOMMENDED to RTFM! See README.md for explanation of what these do.
 #
+# Make sure the /run directory exists
+mkdir -p /run/noisecapt
 # LOOPTIME is the time between two runs of noisecapt (in seconds)
 # Since Noisecapt.sh already runs forever by itself, noisecapt is the time between a failure of the script, and
 # the system trying to re-start it. This can safely be set to a few seconds.
