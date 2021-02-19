@@ -17,6 +17,7 @@ services:
       - PF_CAPTURETIME=5
 #      - PF_AUDIOCARD=2
 #      - PF_AUDIODEVICE=0
+#      - PF_ALSA_MANUAL=ON
     tmpfs:
       - /run:rw,nosuid,nodev,exec,relatime,size=128M
       - /tmp:rw,nosuid,nodev,noexec,relatime,size=128M
