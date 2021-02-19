@@ -23,7 +23,7 @@ jobs:
     #  - IMAGE: image name on dockerhub
     env:
       REPO: kx1t
-      IMAGE: planefence
+      IMAGE: noisecapt
       PUSH: true
     
     steps:
