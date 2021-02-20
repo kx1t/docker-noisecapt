@@ -40,7 +40,7 @@ then
 	if [ "x$CARD" != "x" ]
 	then
 		# Figure out which NumID the mute button is and switch it off:
-		amixer -c $CARD cset numid=$(amixer --card $CARD contents|grep 'Mic Capture Switch' | sed  -n 's/numid=\([0-9][0-9]*\).*/\1/p') off >/dev/null 2>&1
+		amixer -c $CARD cset numid=$(amixer --card $CARD contents|grep 'Mic Capture Switch' | sed  -n 's/numid=\([0-9][0-9]*\).*/\1/p') on >/dev/null 2>&1
 		#
 		# Get the NumID and max value for the audio input level and max it out
 		amixer -c $CARD cset numid=$(amixer --card $CARD contents|grep 'Mic Capture Volume' | sed  -n 's/numid=\([0-9][0-9]*\).*/\1/p') $(amixer --card $CARD contents|grep -A1 'Mic Capture Volume' | sed  -n 's/.*max=\([0-9][0-9]*\).*/\1/p') >/dev/null 2>&1
