@@ -50,10 +50,10 @@ NoiseCapt continuously listen for, and processes audio from a soundcard. This ca
 1. Deploy the NoiseCapt container. It's OK if things aren't working (yet)
 2. From the host machine, give this command: `docker exec -t noisecapt arecord -l`
 3. The output will look like this:
-`**** List of CAPTURE Hardware Devices ****
+```**** List of CAPTURE Hardware Devices ****
 card 2: Device [USB PnP Sound Device], device 0: USB Audio [USB Audio]
 ...
-`
+```
 4. Note that your Audio Card = 2 and your Audio Device = 0 in this case
 5. Update your `docker-compose.yml` file and uncomment / enter these values at the lines with `PF_AUDIOCARD=` and `PF_AUDIODEVICE=`
 6. Restart your container (`docker-compose up -d`)
@@ -63,22 +63,23 @@ Most probably, your soundcard is muted. The script does an attempt to unmute the
 Here's how to do this manually
 1. Do `docker exec -it noisecapt amixer --card 2 contents`. Replace the card number with the one you figure out in the section above.
 2. Look for something like this:
-`numid=3,iface=MIXER,name='Mic Playback Switch'
+```numid=3,iface=MIXER,name='Mic Playback Switch'
   ; type=BOOLEAN,access=rw------,values=1
   : values=on
-`
+```
 `Mic Playback Switch` means mute. If it's set to `values=on`, use this to set it off. Replace `numid=3` by the value on your screen and `--card 2` with the correct card value: `docker exec -it noisecapt amixer --card 2 cset numid=3 off`
 3. Do the same for AGC:
-`numid=9,iface=MIXER,name='Auto Gain Control'
+```numid=9,iface=MIXER,name='Auto Gain Control'
   ; type=BOOLEAN,access=rw------,values=1
   : values=off
-`
+```
 `Mic Playback Switch` means mute. If `values=on`, use this to set it off: `docker exec -it noisecapt amixer --card 2 cset numid=9 off`. Again, your card number and numid may vary.
 4. Finally, max out the microphone volume. Look for the line below `Mic Capture Volume` where it says `...,min=0,max=nnn`. You want to set it to whatever the stated max value is:
-`numid=8,iface=MIXER,name='Mic Capture Volume'
+```numid=8,iface=MIXER,name='Mic Capture Volume'
   ; type=INTEGER,access=rw---R--,values=1,min=0,max=16,step=0
   : values=16
-  | dBminmax-min=0.00dB,max=23.81dB`
+  | dBminmax-min=0.00dB,max=23.81dB
+  ```
 In our case, it's card 2, numid=8, and max value is 16:
 `docker exec -it noisecapt amixer --card 2 cset numid=8 16`
 5. Make it permanent
