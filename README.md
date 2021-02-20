@@ -60,7 +60,7 @@ card 2: Device [USB PnP Sound Device], device 0: USB Audio [USB Audio]
 5. Update your `docker-compose.yml` file and uncomment / enter these values at the lines with `PF_AUDIOCARD=` and `PF_AUDIODEVICE=`
 6. Restart your container (`docker-compose up -d`)
 
-### Everything appears to work but there's all volumes are around -75 - -80 dB and the spectrograms appear empty
+### Everything appears to work but all volumes are around -75 - -80 dB and the spectrograms appear empty
 Most probably, your soundcard is muted. The script does an attempt to unmute the card, crank up the volume, and switch off AGC but apparently it wasn't successful.
 Here's how to do this manually
 1. Do `docker exec -it noisecapt amixer --card 2 contents`. Replace the card number with the one you figure out in the section above.
