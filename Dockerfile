@@ -71,6 +71,9 @@ RUN set -x && \
        cp /noisecapt/88-noisecapt.conf /etc/lighttpd/conf-available && \
        ln -sf /etc/lighttpd/conf-available/88-noisecapt.conf /etc/lighttpd/conf-enabled && \
 #
+# Do some other stuff
+    echo "alias dir=\"ls -alsv\"" >> /root/.bashrc && \
+#
 # install S6 Overlay
     curl -s https://raw.githubusercontent.com/mikenye/deploy-s6-overlay/master/deploy-s6-overlay.sh | sh && \
 #

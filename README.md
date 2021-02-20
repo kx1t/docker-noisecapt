@@ -44,18 +44,61 @@ NoiseCapt continuously listen for, and processes audio from a soundcard. This ca
 - In the `/opt/planefence` directory of the machine where you run PlaneFence, edit `.env` and make sure to set the PF_NOISECAPT variable to the URL of your exposed port, for example "http://my.ip:30088/". Instructions on what to set it to can be also found in the [example `.env` file](https://github.com/kx1t/docker-planefence/blob/main/.env-example).
 
 ## Advanced configuration
+
+### Multiple audio cards, or no card found
 - NoiseCapt will attempt to automatically identify your audio card, but sometimes it can get confused. If you have multiple audio cards on your system (which is often the case on larger machines), it will pick the first one it can find. If this is not what you want, you can manually configure which audio card to pick. Here's how it works:
 1. Deploy the NoiseCapt container. It's OK if things aren't working (yet)
 2. From the host machine, give this command: `docker exec -t noisecapt arecord -l`
 3. The output will look like this:
-`**** List of CAPTURE Hardware Devices ****
+
+```**** List of CAPTURE Hardware Devices ****
 card 2: Device [USB PnP Sound Device], device 0: USB Audio [USB Audio]
-  Subdevices: 1/1
-  Subdevice #0: subdevice #0
-`
+...
+```
+
 4. Note that your Audio Card = 2 and your Audio Device = 0 in this case
 5. Update your `docker-compose.yml` file and uncomment / enter these values at the lines with `PF_AUDIOCARD=` and `PF_AUDIODEVICE=`
 6. Restart your container (`docker-compose up -d`)
+
+### Everything appears to work but all volumes are around -75 - -80 dB and the spectrograms appear empty
+Most probably, your soundcard is muted. The script does an attempt to unmute the card, crank up the volume, and switch off AGC but apparently it wasn't successful.
+Here's how to do this manually
+1. Do `docker exec -it noisecapt amixer --card 2 contents`. Replace the card number with the one you figure out in the section above.
+
+2. Look for something like this:
+
+```
+numid=3,iface=MIXER,name='Mic Capture Switch'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=ffn
+```
+
+`Mic Capture Switch` means muted when off. If it's set to `values=off`, use this to switch it on. Replace `numid=3` by the value on your screen and `--card 2` with the correct card value: `docker exec -it noisecapt amixer --card 2 cset numid=3 on`
+
+3. Do the same for AGC:
+```
+numid=9,iface=MIXER,name='Auto Gain Control'
+  ; type=BOOLEAN,access=rw------,values=1
+  : values=off
+```
+`Auto Gain Control` should be set to off. If `values=on`, then do this: `docker exec -it noisecapt amixer --card 2 cset numid=9 off`. Again, your card number and numid may vary.
+
+4. Finally, max out the microphone volume. Look for the line below `Mic Capture Volume` where it says `...,min=0,max=nnn`. You want to set it to whatever the stated max value is:
+
+```
+numid=8,iface=MIXER,name='Mic Capture Volume'
+  ; type=INTEGER,access=rw---R--,values=1,min=0,max=16,step=0
+  : values=16
+  | dBminmax-min=0.00dB,max=23.81dB
+```
+
+In our case, it's card 2, numid=8, and max value is 16:
+`docker exec -it noisecapt amixer --card 2 cset numid=8 16`
+
+5. Make it permanent
+- execute this command: `docker exec -it noisecapt alsactl store`
+- add this variable to your `docker-compose.yml` in the environment section: `PF_ALSA_MANUAL=ON`. With that, the system won't try to do its own thing next time the container is booted.
+
 
 ### Build your own container
 This repository contains a Dockerfile that can be used to build your own.
