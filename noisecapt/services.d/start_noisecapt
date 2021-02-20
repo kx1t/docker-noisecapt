@@ -39,7 +39,7 @@ then
 	[[ "x$FP_AUDIOCARD" != "x" ]] && CARD="$FP_AUDIOCARD" || CARD=$(arecord --list-devices | sed  -n 's/.*card \([0-9][0-9]*\).*/\1/p')
 	if [ "x$CARD" != "x" ]
 	then
-		# Figure out which NumID the mute button is and switch it off:
+		# Figure out which NumID the mute button is unmute (which means set Mic Capture Switch = on):
 		amixer -c $CARD cset numid=$(amixer --card $CARD contents|grep 'Mic Capture Switch' | sed  -n 's/numid=\([0-9][0-9]*\).*/\1/p') on >/dev/null 2>&1
 		#
 		# Get the NumID and max value for the audio input level and max it out
