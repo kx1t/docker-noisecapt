@@ -22,7 +22,7 @@ RUN set -x && \
     TEMP_PACKAGES+=(git) && \
     TEMP_PACKAGES+=(automake) && \
     TEMP_PACKAGES+=(autoconf) && \
-    TEMP_PACKAGES+=(wget) && \
+    # TEMP_PACKAGES+=(wget) && \
     # logging
     KEPT_PACKAGES+=(gawk) && \
     KEPT_PACKAGES+=(pv) && \
