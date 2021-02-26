@@ -9,11 +9,19 @@ services:
     restart: always
     devices:
       - /dev/snd:/dev/snd
+# you must expose this port if noisecapt doesnt run from the same
+# docker-compose.yml as planefence:
 #    ports:
 #      - 30088:80
     environment:
+# make sure that the timezones of noisecapt and planefence are the same
+# otherwise things wont work
       - TZ=${FEEDER_TZ}
-      - PF_DELETEAFTER=7
+# Noisecapt produces lots of data. This is the retention time in hours
+# If you make it more than 2 (hrs), you should also increase the tmpfs size
+# for /run
+      - PF_DELETEAFTER=1
+# This defines the capure time blocks, you shpuld probably leave this alone:
       - PF_CAPTURETIME=5
 #      - PF_AUDIOCARD=2
 #      - PF_AUDIODEVICE=0
