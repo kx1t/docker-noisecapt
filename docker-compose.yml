@@ -19,5 +19,5 @@ services:
 #      - PF_AUDIODEVICE=0
 #      - PF_ALSA_MANUAL=ON
     tmpfs:
-      - /run:rw,nosuid,nodev,exec,relatime,size=128M
+      - /run:rw,nosuid,nodev,exec,relatime,size=256M
       - /tmp:rw,nosuid,nodev,noexec,relatime,size=128M
