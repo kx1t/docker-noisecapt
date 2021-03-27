@@ -64,13 +64,13 @@ LOG "Starting NoiseCapt"
 # Try to get the card/device for the audio input device
 if [ "x$FP_AUDIOCARD" == "x" ]
 then
-	CARD=$(arecord -l |grep -oP "card\s+\K\w+")
-	DEVICE=$(arecord -l |grep -oP "device\s+\K\w+")
-	LOG "Audio device Card,Device auto-set to \"$CARD,$DEVICE\""
+        CARD=$(arecord -l |grep -oP "card\s+\K\w+")
+        DEVICE=$(arecord -l |grep -oP "device\s+\K\w+")
+        LOG "Audio device Card,Device auto-set to \"$CARD,$DEVICE\""
 else
   CARD=$PF_AUDIOCARD
   DEVICE=$FP_AUDIODEVICE
-	LOG "Audio device Card,Device manually set to \"$CARD,$DEVICE\""
+        LOG "Audio device Card,Device manually set to \"$CARD,$DEVICE\""
 fi
 
 # Calc how many records we need from the past logs
@@ -84,14 +84,15 @@ do
         # determine which file we need to write to
         LOGTODAY="$OUTFILE$(date +'%y%m%d')$OUTFILEEXT"
         LOGYSTRDAY="$OUTFILE$(date -d yesterday +'%y%m%d')$OUTFILEEXT"
-	LOG "Logfiles today=$LOGTODAY yesterday=$LOGYSTRDAY"
+        LOG "Logfiles today=$LOGTODAY yesterday=$LOGYSTRDAY"
+
 
         # and determine if yesterday's file exists
         if [ ! -f "$LOGYSTRDAY" ]
         then
                 LOGYSTRDAY=""
-        	LOG "Yesterday log doesnt exist"
-	fi
+                LOG "Yesterday log doesnt exist"
+        fi
 
   AUDIOTIME=$(date +%s)
 
@@ -100,10 +101,10 @@ do
 
         # RMSREC="$(arecord -D hw:$CARD,$DEVICE -d $CAPTURETIME --fatal-errors --buffer-size=192000 -f dat -t raw -c 1 --quiet | sox -V -t raw -b 16 -r 48 -c 1 -e signed-integer - -t raw -b 16 -r 48 -c 1 /dev/null stats 2>&1 | grep 'RMS lev dB')"
         # RMSREC="$(arecord -D hw:$CARD,$DEVICE -d $CAPTURETIME --fatal-errors --buffer-size=192000 -f dat -t raw -c 1 --quiet | sox -V -t raw -b 16 -r 48000 -c 1 -e signed-integer - -t raw -b 16 -r 48000 -c 1 -e signed-integer - sinc -n 4096 1500-9000 2>/dev/null | sox -V -t raw -b 16 -r 48000 -c 1 -e signed-integer - -t raw -b 16 -r 48000 -c 1 /dev/null stats 2>&1 |grep 'RMS lev dB')"
-	RMSREC=$(arecord -D hw:$CARD,$DEVICE -d 5 --fatal-errors --buffer-size=192000 -f dat -t raw -c 1 --quiet 2>/dev/null | sox -V -t raw -b 16 -r 48000 -c 1 -e signed-integer - -n sinc 200-10000 stats rate 16000 spectrogram -o "$OUTFILE"spectro-`date -d @$AUDIOTIME +%y%m%d-%H%M%S`.png  -Z -10 -z 60 -t "Audio Spectrogram for `date -d @$AUDIOTIME`" -c "PlaneFence (C) 2020,2021 by kx1t" -p 1 2>&1 | grep 'RMS lev dB')
-	# put the dB value into LEVEL as an integer. BASH arithmatic doesn't like
-	# float values, so we need to do some trickery to convert the number:
-	LC_ALL=C printf -v LEVEL '%.0f' "${RMSREC##* }"
+        RMSREC=$(arecord -D hw:$CARD,$DEVICE -d 5 --fatal-errors --buffer-size=192000 -f dat -t raw -c 1 --quiet 2>/dev/null | sox -V -t raw -b 16 -r 48000 -c 1 -e signed-integer - -n sinc 200-10000 stats rate 16000 spectrogram -o "$OUTFILE"spectro-`date -d @$AUDIOTIME +%y%m%d-%H%M%S`.png  -Z -10 -z 60 -t "Audio Spectrogram for `date -d @$AUDIOTIME`" -c "PlaneFence (C) 2020,2021 by kx1t" -p 1 2>&1 | grep 'RMS lev dB')
+        # put the dB value into LEVEL as an integer. BASH arithmatic doesn't like
+        # float values, so we need to do some trickery to convert the number:
+        LC_ALL=C printf -v LEVEL '%.0f' "${RMSREC##* }"
 
   # check if $LEVEL is less than zero. If it's zero, there was a read error and we should skip.
   if [[ "$LEVEL" == "0" ]]
@@ -111,50 +112,19 @@ do
     echo "Zero sample - skipping"
     continue
   fi
-  
-	LOG "Level=$LEVEL Audiotime=$AUDIOTIME"
+        touch $LOGTODAY # make sure it exists so cat wont fail in the next line
+        # concatenate 1 hour of logs into $TEMPFILE:
+        cat $LOGYSTRDAY $LOGTODAY | awk -F "," -v t=$((AUDIOTIME-86410)) '$1>=t' > $TEMPFILE
+
+        LOG "Level=$LEVEL Audiotime=$AUDIOTIME"
         # capture and calculate the averages
-        # determine the number of records in today's log
-        if [ -f "$LOGTODAY" ]
-        then
-                LOGLINES="$(wc -l "$LOGTODAY")"
-                LOGLINES=${LOGLINES% *}
-        else
-                LOGLINES=0
-        fi
-	LOG "Today's log has $LOGLINES lines"
 
-        # create a TMP file with the records we need
-        if [ "$ONEHOUR" -gt $LOGLINES ]
-        then
-                # we have too few records in today's log and we need a few from yesterday's log if it exists
-                if [ -f "$LOGYSTRDAY" ]
-                then
-                        (( UNDERFLOW="$ONEHOUR - $LOGLINES" ))
-                        tail --lines="$UNDERFLOW" "$LOGYSTRDAY" > $TEMPFILE
-                        if [ -f "LOGTODAY" ]
-			then
-				cat "$LOGTODAY" >> $TEMPFILE
-			fi
-                elif  [ -f "$LOGTODAY" ]
-                then
-                        # yesterday's file doesn't exist and we'll have to make do with today's
-                        cat "$LOGTODAY" > $TEMPFILE
+        # there is a chance that no $TEMPFILE was created if there was no logfile
+        # for either today or yesterday, so let's touch the file so we can be sure
+        # it exists
+        touch $TEMPFILE
 
-                fi
-        elif [ -f "$LOGTODAY" ]
-        then
-                # we need $LOGLINES records from the $LOGTODAY
-                tail --lines=$LOGLINES "$LOGTODAY" > $TEMPFILE
-        fi
-
-	# there is a chance that no $TEMPFILE was created if there was no logfile
-	# for either today or yesterday, so let's touch the file so we can be sure
-	# it exists
-	touch $TEMPFILE
-
-        # Now we can read the TEMPFILE and determine the averages
-        (( ONEMINCT = 1 ))
+        # Now we can read the TEMPFILE and determine the averages        (( ONEMINCT = 1 ))
         (( FIVEMINCT = 1 ))
         (( TENMINCT = 1 ))
         (( ONEHRCT = 1 ))
@@ -169,8 +139,8 @@ do
             while IFS= read -r ONELINE
             do
                 # split $LINE into an array:
-		unset LINE
-		IFS=',' read -a LINE <<< "$ONELINE"
+                unset LINE
+                IFS=',' read -a LINE <<< "$ONELINE"
                 if [ $(( $AUDIOTIME - ${LINE[0]} )) -lt 3600 ]
                 then
                         (( "ONEHRCT++" ))
@@ -180,8 +150,7 @@ do
                 if [ $(( $AUDIOTIME - ${LINE[0]} )) -lt 600 ]
                 then
                         (( "TENMINCT++" ))
-                        (( "TENMINTL = $TENMINTL + ${LINE[1]}" ))
-                fi
+                        (( "TENMINTL = $TENMINTL + ${LINE[1]}" ))                fi
 
                 if [ $(( $AUDIOTIME - ${LINE[0]} )) -lt 300 ]
                 then
@@ -206,10 +175,11 @@ do
         # Now we have all the averages, we can write them to the file
         printf "%s,%s,%s,%s,%s,%s\n" "$AUDIOTIME" "$LEVEL" "$ONEMINAVG" "$FIVEMINAVG" "$TENMINAVG" "$ONEHRAVG" >> $LOGTODAY
 
-	# Link latest spectrogram to PNG file
-	ln -sf "$OUTFILE"spectro-`date -d @$AUDIOTIME +%y%m%d-%H%M%S`.png "$OUTFILE"spectro-latest.png
-	LOG "ln -sf "$OUTFILE"spectro-`date -d @$AUDIOTIME +%y%m%d-%H%M%S`.png "$OUTFILE"/spectro-latest.png"
-	# Last - clean up any PNG spectrograms older than 12 hours (720 minutes):
-	find "$OUTFILE"spectro-*.png -maxdepth 1 -mmin +720 -delete
+        # Link latest spectrogram to PNG file
+        ln -sf "$OUTFILE"spectro-`date -d @$AUDIOTIME +%y%m%d-%H%M%S`.png "$OUTFILE"spectro-latest.png
+        LOG "ln -sf "$OUTFILE"spectro-`date -d @$AUDIOTIME +%y%m%d-%H%M%S`.png "$OUTFILE"/spectro-latest.png"
+        # Last - clean up any PNG spectrograms older than 12 hours (720 minutes):
+        [[ -z "$PF_DELETEAFTER" ]] && (( DTIME=PF_DELETEAFTER * 60 )) || DTIME=60
+        find "$OUTFILE"spectro-*.png -maxdepth 1 -mmin +$DTIME -delete
 
 done
