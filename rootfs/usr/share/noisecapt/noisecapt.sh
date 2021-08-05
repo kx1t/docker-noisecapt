@@ -25,7 +25,10 @@ echo "[$APPNAME][$(date)] PlaneFence deployment started"
 # Feel free to make changes to the variables between these two lines. However, it is# STRONGLY RECOMMENDED to RTFM! See README.md for explanation of what these do.
 #
 # CAPTURETIME is the duration of a single audio capture, in seconds
+# CLEANUPINT is the number of runs before we clean up the log file (as it often gets corrupten for no apparent reason)
 [[ "x$PF_CAPTURETIME" == "x" ]] && CAPTURETIME=5 || CAPTURETIME=$PF_CAPTURETIME
+[[ "x$PF_CLEANUPTIME"== "x"]] && CLEANUPINT=$((PF_CLEANUPTIME / CAPTURETIME))
+(( CLEANUPINT < 1 )) && CLEANUPINT=10
 # OUTFILE contains the base part of the output file for the captured data,
 # including the directory. Please make sure that this directory is accessable
 # for the script as it won't attempt to create or CHMOD it. If the script
@@ -36,6 +39,7 @@ TEMPFILE="/run/noisecapt/noisecapt.tmp"
 # If you don't want logging, simply set  the VERBOSE=1 line below to VERBOSE=0
 VERBOSE=1
 LOGFILE=/dev/stdout
+LOOPCOUNTER=0
 # The script will attempt to figure out by itself what your audio device is
 # However, it may get it wrong, especially if you have more than
 # 1 soundcard ,webcam, etc
@@ -209,7 +213,16 @@ do
     # Link latest spectrogram to PNG file
     ln -sf "$OUTFILE"spectro-`date -d @$AUDIOTIME +%y%m%d-%H%M%S`.png "$OUTFILE"spectro-latest.png
     LOG "ln -sf "$OUTFILE"spectro-`date -d @$AUDIOTIME +%y%m%d-%H%M%S`.png "$OUTFILE"/spectro-latest.png"
-    # Last - clean up any PNG spectrograms older than 12 hours (720 minutes):
+    # clean up any PNG spectrograms older than 12 hours (720 minutes):
     find "$OUTFILE"spectro-*.png -maxdepth 1 -mmin +720 -delete
 
+    # clean up log file if necessary:
+    (( LOOPCOUNTER++ ))
+    if (( LOOPCOUNTER == CLEANUPINT ))
+    then
+        LOOPCOUNTER=0
+        tmpfile=$(mktemp)
+        awk -F, -v st=$(date -d "$(date +"%Y-%m-%d 00:00:00")" +%s) -v et=$(date -d "$(date +"%Y-%m-%d 23:59:59")" +%s)  '$1 >= st && $1 <= et && substr($2,1,1) == "-" && length($2) <= 3 && substr($3,1,1) == "-" && length($3) <= 3 && substr($4,1,1) == "-" && length($4) <= 3 && substr($5,1,1) == "-" && length($5) <= 3 && substr($6,1,1) == "-" && length($6) <= 3 {print}' $LOGTODAY > $tmpfile
+        mv -f $tmpfile $LOGTODAY
+    fi
 done
