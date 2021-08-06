@@ -3,7 +3,7 @@
 
 APPNAME="noisecapt"
 
-echo "[$APPNAME][$(date)] Socket30003 deployment started"
+echo "[$APPNAME][$(date)] deployment started"
 
 # -----------------------------------------------------------------------------------
 # Copyright 2020 Ramon F. Kolb - licensed under the terms and conditions
