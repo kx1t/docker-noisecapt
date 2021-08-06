@@ -3,7 +3,7 @@
 
 APPNAME="noisecapt"
 
-echo "[$APPNAME][$(date)] PlaneFence deployment started"
+echo "[$APPNAME][$(date)] deployment started"
 #!/bin/bash
 # NOISECAPT - a Bash shell script to continuously capture audio levels from a standard audio device
 #
@@ -27,7 +27,7 @@ echo "[$APPNAME][$(date)] PlaneFence deployment started"
 # CAPTURETIME is the duration of a single audio capture, in seconds
 # CLEANUPINT is the number of runs before we clean up the log file (as it often gets corrupten for no apparent reason)
 [[ "x$PF_CAPTURETIME" == "x" ]] && CAPTURETIME=5 || CAPTURETIME=$PF_CAPTURETIME
-[[ "x$PF_CLEANUPTIME"== "x"]] && CLEANUPINT=$((PF_CLEANUPTIME / CAPTURETIME))
+[[ "x$PF_CLEANUPTIME" == "x" ]] && CLEANUPINT=10 || CLEANUPINT=$((PF_CLEANUPTIME / CAPTURETIME))
 (( CLEANUPINT < 1 )) && CLEANUPINT=10
 # OUTFILE contains the base part of the output file for the captured data,
 # including the directory. Please make sure that this directory is accessable
@@ -225,5 +225,6 @@ do
         tmpfile=$(mktemp)
         awk -F, -v st=$(date -d "$(date +"%Y-%m-%d 00:00:00")" +%s) -v et=$(date -d "$(date +"%Y-%m-%d 23:59:59")" +%s)  '$1 >= st && $1 <= et && substr($2,1,1) == "-" && length($2) <= 3 && substr($3,1,1) == "-" && length($3) <= 3 && substr($4,1,1) == "-" && length($4) <= 3 && substr($5,1,1) == "-" && length($5) <= 3 && substr($6,1,1) == "-" && length($6) <= 3 {print}' $LOGTODAY > $tmpfile
         mv -f $tmpfile $LOGTODAY
+        chmod a+r $LOGTODAY
     fi
 done
