@@ -2,10 +2,11 @@ name: Cancelling Duplicates
 on:
   workflow_run:
     workflows:
-      - 'Deploy to Docker Hub'
-      - 'Check Linting'
-      - 'Tests'
-    types: ['requested']
+      - "Deploy"
+      - "Deploy to GHCR"
+      - "Check Linting"
+      - "Tests"
+    types: ["requested"]
 
 jobs:
   cancel-duplicate-workflow-runs:
@@ -18,4 +19,3 @@ jobs:
           cancelMode: allDuplicates
           token: ${{ secrets.GITHUB_TOKEN }}
           sourceRunId: ${{ github.event.workflow_run.id }}
-          

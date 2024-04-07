@@ -1,12 +1,12 @@
 #!/command/with-contenv bash
-#shellcheck shell=bash
+#shellcheck shell=bash disable=SC1091,SC2154
 
-APPNAME="cleanup"
+source /scripts/common
 
-echo "[$APPNAME][$(date)] Cleanup started as an s6 service"
+"${s6wrap[@]}" echo "Cleanup started as an s6 service"
 
 # -----------------------------------------------------------------------------------
-# Copyright 2020, 2021 Ramon F. Kolb - licensed under the terms and conditions
+# Copyright 2020-2024 Ramon F. Kolb - licensed under the terms and conditions
 # of GPLv3. The terms and conditions of this license are included with the Github
 # distribution of this package, and are also available here:
 # https://github.com/kx1t/docker-planefence
@@ -22,7 +22,7 @@ LOOPTIME="1d"
 # It specifically applies to files in the HTML directory.
 # If $PF_DELETEAFTER is set to "0" then we never delete.
 # Note - files in /tmp will get deleted if they are older than 2 days.
-[[ "x$PF_DELETEAFTER" == "x" ]] && OLDERTHAN=14 || OLDERTHAN=$PF_DELETEAFTER
+OLDERTHAN="${PF_DELETEAFTER:-14}"
 #
 # MAXLOGLINES contains the max number of lines that we will keep in /tmp/planefence.log
 MAXLOGLINES=5000
@@ -33,19 +33,19 @@ CLEANUP ()
   if (( OLDERTHAN > 0 ))
   then
     find /tmp -mindepth 1 -mtime +2 -delete 2>/dev/null
-    find /run/noisecapt/*.log -mtime +$OLDERTHAN -delete 2>/dev/null
+    find /run/noisecapt/*.log -mtime +"$OLDERTHAN" -delete 2>/dev/null
     tail -n $MAXLOGLINES /run/noisecapt/noisecapt.log >/run/noisecapt/noisecapt.log.tmp 2>/dev/null
     mv -f /run/noisecapt/noisecapt.log.tmp /run/noisecapt/noisecapt.log 2>/dev/null
   else
-    echo echo "[$APPNAME][$(date)] $LOOPTIME set to 0 - cleanup skipped"
+    "${s6wrap[@]}" echo "$LOOPTIME set to 0 - cleanup skipped"
   fi
 }
 #
 #Now loop forevah:
 while true
 do
-  echo "[$APPNAME][$(date)] Performing a cleanup run..."
+  "${s6wrap[@]}" echo "Performing a cleanup run..."
   CLEANUP
-  echo "[$APPNAME][$(date)] Cleanup done. Sleeping for $LOOPTIME"
+  "${s6wrap[@]}" echo "Cleanup done. Sleeping for $LOOPTIME"
   sleep $LOOPTIME
 done

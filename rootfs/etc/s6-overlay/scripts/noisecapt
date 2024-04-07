@@ -1,12 +1,11 @@
 #!/command/with-contenv bash
-#shellcheck shell=bash
+#shellcheck shell=bash disable=SC1091,SC2154
 
-APPNAME="noisecapt"
-
-echo "[$APPNAME][$(date)] deployment started"
+source /scripts/common
+"${s6wrap[@]}" echo "deployment started"
 
 # -----------------------------------------------------------------------------------
-# Copyright 2020 Ramon F. Kolb - licensed under the terms and conditions
+# Copyright 2020-2024 Ramon F. Kolb - licensed under the terms and conditions
 # of GPLv3. The terms and conditions of this license are included with the Github
 # distribution of this package, and are also available here:
 # https://github.com/kx1t/noisecapt/
@@ -34,19 +33,17 @@ NOISECAPTDIR=/usr/share/noisecapt
 #
 # Get the card and device number from the .env file, or if not, extract it from arecord.
 # The $PF_ALSA_MANUAL variable indicates that the user has done their own settings and we shouldn't touch them
-if [ "$PF_ALSA_MANUAL" != "ON" ]
-then
-	[[ "x$FP_AUDIOCARD" != "x" ]] && CARD="$FP_AUDIOCARD" || CARD=$(arecord --list-devices | sed  -n 's/.*card \([0-9][0-9]*\).*/\1/p')
-	if [ "x$CARD" != "x" ]
-	then
+if chk_enabled "$PF_ALSA_MANUAL"; then
+		CARD="${FP_AUDIOCARD:-$(arecord --list-devices | sed  -n 's/.*card \([0-9][0-9]*\).*/\1/p')}"
+	if [[ -n "$CARD" ]]; then
 		# Figure out which NumID the mute button is unmute (which means set Mic Capture Switch = on):
-		amixer -c $CARD cset numid=$(amixer --card $CARD contents|grep 'Mic Capture Switch' | sed  -n 's/numid=\([0-9][0-9]*\).*/\1/p') on >/dev/null 2>&1
+		amixer -c "$CARD" cset numid="$(amixer --card "$CARD" contents|grep 'Mic Capture Switch' | sed  -n 's/numid=\([0-9][0-9]*\).*/\1/p')" on >/dev/null 2>&1
 		#
 		# Get the NumID and max value for the audio input level and max it out
-		amixer -c $CARD cset numid=$(amixer --card $CARD contents|grep 'Mic Capture Volume' | sed  -n 's/numid=\([0-9][0-9]*\).*/\1/p') $(amixer --card $CARD contents|grep -A1 'Mic Capture Volume' | sed  -n 's/.*max=\([0-9][0-9]*\).*/\1/p') >/dev/null 2>&1
+		amixer -c "$CARD" cset numid="$(amixer --card "$CARD" contents|grep 'Mic Capture Volume' | sed  -n 's/numid=\([0-9][0-9]*\).*/\1/p') $(amixer --card "$CARD" contents|grep -A1 'Mic Capture Volume' | sed  -n 's/.*max=\([0-9][0-9]*\).*/\1/p')" >/dev/null 2>&1
 		#
 		# Last - switch the AGC off as this will mess with the audio levels
-		amixer -c $CARD cset numid=$(amixer --card $CARD contents|grep 'Auto Gain Control' | sed  -n 's/numid=\([0-9][0-9]*\).*/\1/p') off >/dev/null 2>&1
+		amixer -c "$CARD" cset numid="$(amixer --card "$CARD" contents|grep 'Auto Gain Control' | sed  -n 's/numid=\([0-9][0-9]*\).*/\1/p')" off >/dev/null 2>&1
 	fi
 fi
 # -----------------------------------------------------------------------------------
@@ -54,8 +51,8 @@ fi
 
 while true
 do
-	$NOISECAPTDIR/noisecapt.sh >/run/noisecapt/noisecapt.log
-	echo "[$APPNAME][$(date)] Noisecapt has exited unexpectedly... restarting in $LOOPTIME"
+	"${s6wrap[@]}" $NOISECAPTDIR/noisecapt.sh >/run/noisecapt/noisecapt.log
+	"${s6wrap[@]}" echo "Noisecapt has exited unexpectedly... restarting in $LOOPTIME"
 	sleep $LOOPTIME
-	echo "[$APPNAME][$(date)] Noisecapt restarting now"
+	"${s6wrap[@]}" echo "Noisecapt restarting now"
 done
