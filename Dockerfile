@@ -8,11 +8,6 @@ RUN set -x && \
 # define packages needed for installation and general management of the container:
     TEMP_PACKAGES=() && \
     KEPT_PACKAGES=() && \
-    # logging
-    KEPT_PACKAGES+=(gawk) && \
-    KEPT_PACKAGES+=(pv) && \
-    # a few KEPT_PACKAGES for debugging - they can be removed in the future
-    KEPT_PACKAGES+=(procps nano) && \
 #
 # define packages needed for noisecapt
     KEPT_PACKAGES+=(jq) && \
