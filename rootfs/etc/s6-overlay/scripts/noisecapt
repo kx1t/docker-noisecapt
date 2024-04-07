@@ -1,0 +1,61 @@
+#!/command/with-contenv bash
+#shellcheck shell=bash
+
+APPNAME="noisecapt"
+
+echo "[$APPNAME][$(date)] deployment started"
+
+# -----------------------------------------------------------------------------------
+# Copyright 2020 Ramon F. Kolb - licensed under the terms and conditions
+# of GPLv3. The terms and conditions of this license are included with the Github
+# distribution of this package, and are also available here:
+# https://github.com/kx1t/noisecapt/
+#
+# The package contains parts of, and modifications or derivatives to the following:
+# Dump1090.Socket30003 by Ted Sluis: https://github.com/tedsluis/dump1090.socket30003
+# These packages may incorporate other software and license terms.
+#
+# -----------------------------------------------------------------------------------
+# Feel free to make changes to the variables between these two lines. However, it is
+# STRONGLY RECOMMENDED to RTFM! See README.md for explanation of what these do.
+#
+# Make sure the /run directory exists
+mkdir -p /run/noisecapt
+# LOOPTIME is the time between two runs of noisecapt (in seconds)
+# Since Noisecapt.sh already runs forever by itself, noisecapt is the time between a failure of the script, and
+# the system trying to re-start it. This can safely be set to a few seconds.
+LOOPTIME=10s
+#
+# NOISECAPTDIR contains the directory where noisecapt.sh is location
+NOISECAPTDIR=/usr/share/noisecapt
+# -----------------------------------------------------------------------------------
+#
+# Do some magic to try to ensure the soundcard is not muted:
+#
+# Get the card and device number from the .env file, or if not, extract it from arecord.
+# The $PF_ALSA_MANUAL variable indicates that the user has done their own settings and we shouldn't touch them
+if [ "$PF_ALSA_MANUAL" != "ON" ]
+then
+	[[ "x$FP_AUDIOCARD" != "x" ]] && CARD="$FP_AUDIOCARD" || CARD=$(arecord --list-devices | sed  -n 's/.*card \([0-9][0-9]*\).*/\1/p')
+	if [ "x$CARD" != "x" ]
+	then
+		# Figure out which NumID the mute button is unmute (which means set Mic Capture Switch = on):
+		amixer -c $CARD cset numid=$(amixer --card $CARD contents|grep 'Mic Capture Switch' | sed  -n 's/numid=\([0-9][0-9]*\).*/\1/p') on >/dev/null 2>&1
+		#
+		# Get the NumID and max value for the audio input level and max it out
+		amixer -c $CARD cset numid=$(amixer --card $CARD contents|grep 'Mic Capture Volume' | sed  -n 's/numid=\([0-9][0-9]*\).*/\1/p') $(amixer --card $CARD contents|grep -A1 'Mic Capture Volume' | sed  -n 's/.*max=\([0-9][0-9]*\).*/\1/p') >/dev/null 2>&1
+		#
+		# Last - switch the AGC off as this will mess with the audio levels
+		amixer -c $CARD cset numid=$(amixer --card $CARD contents|grep 'Auto Gain Control' | sed  -n 's/numid=\([0-9][0-9]*\).*/\1/p') off >/dev/null 2>&1
+	fi
+fi
+# -----------------------------------------------------------------------------------
+#
+
+while true
+do
+	$NOISECAPTDIR/noisecapt.sh >/run/noisecapt/noisecapt.log
+	echo "[$APPNAME][$(date)] Noisecapt has exited unexpectedly... restarting in $LOOPTIME"
+	sleep $LOOPTIME
+	echo "[$APPNAME][$(date)] Noisecapt restarting now"
+done
