@@ -11,9 +11,7 @@ RUN set -x && \
 #
 # define packages needed for noisecapt
     KEPT_PACKAGES+=(jq) && \
-    KEPT_PACKAGES+=(bc) && \
     KEPT_PACKAGES+=(lighttpd) && \
-    KEPT_PACKAGES+=(iputils-ping) && \
     KEPT_PACKAGES+=(alsa-utils) && \
     KEPT_PACKAGES+=(sox) && \
 #
