@@ -33,17 +33,20 @@ NOISECAPTDIR=/usr/share/noisecapt
 #
 # Get the card and device number from the .env file, or if not, extract it from arecord.
 # The $PF_ALSA_MANUAL variable indicates that the user has done their own settings and we shouldn't touch them
-if chk_enabled "$PF_ALSA_MANUAL"; then
-		CARD="${FP_AUDIOCARD:-$(arecord --list-devices | sed  -n 's/.*card \([0-9][0-9]*\).*/\1/p')}"
+if ! chk_enabled "$PF_ALSA_MANUAL"; then
+		CARD="${PF_AUDIOCARD:-$(arecord --list-devices | sed  -n 's/.*card \([0-9][0-9]*\).*/\1/p')}"
 	if [[ -n "$CARD" ]]; then
 		# Figure out which NumID the mute button is unmute (which means set Mic Capture Switch = on):
-		amixer -c "$CARD" cset numid="$(amixer --card "$CARD" contents|grep 'Mic Capture Switch' | sed  -n 's/numid=\([0-9][0-9]*\).*/\1/p')" on >/dev/null 2>&1
+		numid="$(amixer --card "$CARD" contents|grep 'Mic Capture Switch' | sed  -n 's/numid=\([0-9]\+\).*/\1/p')"
+		amixer -c "$CARD" cset numid="$numid" on >/dev/null 2>&1
 		#
 		# Get the NumID and max value for the audio input level and max it out
-		amixer -c "$CARD" cset numid="$(amixer --card "$CARD" contents|grep 'Mic Capture Volume' | sed  -n 's/numid=\([0-9][0-9]*\).*/\1/p') $(amixer --card "$CARD" contents|grep -A1 'Mic Capture Volume' | sed  -n 's/.*max=\([0-9][0-9]*\).*/\1/p')" >/dev/null 2>&1
-		#
+		maxvolume="$(amixer --card "$CARD" contents|grep -A1 'Mic Capture Volume'| sed  -n 's/.*max=\([0-9]\+\).*/\1/p')"
+		numid="$(amixer --card "$CARD" contents|grep 'Mic Capture Volume' | sed  -n 's/numid=\([0-9]\+\).*/\1/p')"
+		amixer -q -c "$CARD" cset numid="$numid" "$maxvolume"
 		# Last - switch the AGC off as this will mess with the audio levels
-		amixer -c "$CARD" cset numid="$(amixer --card "$CARD" contents|grep 'Auto Gain Control' | sed  -n 's/numid=\([0-9][0-9]*\).*/\1/p')" off >/dev/null 2>&1
+		numid="$(amixer --card "$CARD" contents|grep 'Auto Gain Control' | sed  -n 's/numid=\([0-9]\+\).*/\1/p')"
+		amixer -q -c "$CARD" cset numid="$numid" off
 	fi
 fi
 # -----------------------------------------------------------------------------------
