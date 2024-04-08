@@ -196,7 +196,7 @@ while true; do
 
     # Link latest spectrogram to PNG file
     ln -sf "${OUTFILE}spectro-$(date -d @"$AUDIOTIME" +%y%m%d-%H%M%S).png" "${OUTFILE}spectro-latest.png"
-    LOG "ln -sf ${OUTFILE}pectro-$(date -d @"$AUDIOTIME" +%y%m%d-%H%M%S).png ${OUTFILE}/spectro-latest.png"
+    # LOG "ln -sf ${OUTFILE}pectro-$(date -d @"$AUDIOTIME" +%y%m%d-%H%M%S).png ${OUTFILE}/spectro-latest.png"
     # clean up any PNG spectrograms older than 12 hours (720 minutes):
 	if [[ -z "$PF_DELETEAFTER" ]]; then (( DTIME=PF_DELETEAFTER * 60 )); else DTIME=60; fi
 	find "$OUTFILE"spectro-*.png -maxdepth 1 -mmin +"$DTIME" -delete
