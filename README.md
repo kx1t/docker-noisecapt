@@ -2,16 +2,17 @@
 
 ## What is it?
 
-This repository contains and add-on to kx1t/planefence to collect audio/noise samples and make them available to planefence.
+This repository contains an add-on to [Planefence](http://www.github.com/sdr-enthusiasts/docker-planefence) to collect audio/noise samples and make them available to planefence.
 It does not have any functionality on its own.
+
+Note - it (purposely) does NOT store ambient audio recordings. The container **only** stores peak audio level measurements and creates graphs and spectrograms of them. The audio itself is never retained.
 
 NoiseCapt is deployed as a Docker container and is pre-built for the following architectures:
 
-- linux/ARMv7 (armhf): Raspberry Pi 3B+ / 4B with the standard 32 bits Raspberry OS (tested on Busted, may work but untested on Stretch or Jessie)
 - linux/ARM64: Raspberry Pi 4B with Ubuntu 64 bits OS
 - linux/AMD64: 64-bits PC architecture (Intel or AMD) running Debian Linux (incl. Ubuntu)
 
-The Docker container can be accessed on [Dockerhub (kx1t/noisecapt)](https://hub.docker.com/repository/docker/kx1t/noisecapt) or `ghcr.io/docker-noisecapt` and can be pulled directy using this Docker command: `docker pull ghcr.io/kx1t/docker-noisecapt`.
+The Docker container can be accessed on [GHCR (kx1t/docker-noisecapt)]([https://hub.docker.com/repository/docker/kx1t/noisecapt](https://github.com/kx1t/docker-noisecapt/pkgs/container/docker-noisecapt)) and can be pulled directy using this Docker command: `docker pull ghcr.io/kx1t/docker-noisecapt`.
 
 ## Who is it for?
 
@@ -20,7 +21,7 @@ It basically "listens" to audio from an audio card/dongle connected to your Rasp
 
 Note that this container on itself does not have user-visible output. All output is integrated with [Planefence](http://www.github.com/sdr-enthusiasts/docker-planefence).
 
-## Deploying `docker-planefence`
+## Deploying `docker-noisecapt`
 
 ### Hardware requirements and considerations
 
@@ -30,20 +31,14 @@ NoiseCapt continuously listen for, and processes audio from a soundcard. This ca
 
 #### Sound Card for your Raspberry Pi
 
-- The RPi does not come with a sound card or microphone input. Any cheap devices will work. For example, I've used [this](https://www.amazon.com/dp/B077RBJXP8) card successfully.
-- You should connect it to an external microphone. Any small lapel / lavallier microphone should do. Note that for the sound card mentioned above, you'd need a 3.5mm mono plug (and not a mobile phone headset plug) on the cable. I've had success with [this](https://www.amazon.com/dp/B015KY5J7Y) one.
+- The RPi does not come with a sound card or microphone input. Any cheap devices will work. I've had luck with simple USB lavalier microphones from Amazon.
 - You need to hang the microphone outside, preferably near your antenna and away from other noise sources (like air conditioner units). Make sure to waterproof the microphone. It's OK to completely seal it in a plastic bag, as long as you regularly check for deterioration of the bag caused by UV light.
 
-### Configuration for deployments on the same machine as [PlaneFence](http://www.github.com/kx1t/docker-planefence)
+### Configuration
 
-- Take a look at the [`docker-compose.yml`](https://github.com/kx1t/docker-noisecapt/blob/main/docker-compose.yml) file. Copy the relevant parts over to PlaneFence's `docker-compose.yml` file.
-- In the directory where PlaneFence's `docker-compose.yml` file is located, please edit `.env` to enable the PF_NOISECAPT variable. Instructions on what to set it to can be found in the [example `.env` file](https://github.com/kx1t/docker-planefence/blob/main/.env-example)
-
-### Configuration for deployments on different machines
-
-- Take a look at the [`docker-compose.yml`](https://github.com/kx1t/docker-noisecapt/blob/main/docker-compose.yml) file and edit it to your liking. Copy it on the host machine to (for example) `/opt/noisecapt`
-- In `docker-compose.yml`, make sure you uncomment the `ports:` section. By default, it exposes the NoiseCapt files through a web interface on port 30088. You can change this to another port of your liking.
-- In the `/opt/planefence` directory of the machine where you run PlaneFence, edit `.env` and make sure to set the PF_NOISECAPT variable to the URL of your exposed port, for example "`http://my.ip:30088/`". Instructions on what to set it to can be also found in the [example `.env` file](https://github.com/kx1t/docker-planefence/blob/main/.env-example).
+- Take a look at the [`docker-compose.yml`](https://github.com/kx1t/docker-noisecapt/blob/main/docker-compose.yml) file and edit it to your liking. Copy it on the host machine to (for example) `/opt/adsb`, or add it to your existing `docker-compose.yml`
+- If you don't deploy it in the same docker compose stack as Planefence, make sure to uncomment the `ports:` section in `docker-compose.yml`. This exposes the NoiseCapt files through a web interface on port 30088, which is needed by Planefence. You can change this to another port of your liking.
+- In your `planefence.config` file, make sure to set the PF_NOISECAPT variable to the URL of your exposed port, for example "`PF_NOISECAPT=http://noisecapt`"
 
 ## Advanced configuration
 
@@ -106,13 +101,6 @@ Here's how to do this manually
 
 - execute this command: `docker exec -it noisecapt alsactl store`
 - add this variable to your `docker-compose.yml` in the environment section: `PF_ALSA_MANUAL=ON`. With that, the system won't try to do its own thing next time the container is booted.
-
-### Build your own container
-
-This repository contains a Dockerfile that can be used to build your own.
-
-1. Pull the repository and issue the following command from the base directory of the repo: `docker build --compress --pull --no-cache -t kx1t/noisecapt .`
-2. Then simply restart the container with `pushd /opt/planefence && docker-compose up -d && popd`
 
 ## Acknowledgements, Attributions, and License
 
