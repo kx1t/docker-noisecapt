@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   noisecapt:
     image: ghcr.io/kx1t/docker-noisecapt
