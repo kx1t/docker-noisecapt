@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   noisecapt:
-    image: kx1t/noisecapt
+    image: ghcr.io/kx1t/docker-noisecapt
     tty: true
     container_name: noisecapt
     hostname: noisecapt
@@ -16,12 +16,14 @@ services:
       # Noisecapt produces lots of data. This is the retention time in hours
       # If you make it more than 2 (hrs), you should also increase the tmpfs size
       # for /run
-      - PF_DELETEAFTER=1
+      - PF_DELETEAFTER=2
       # This defines the capure time blocks, you shpuld probably leave this alone:
       - PF_CAPTURETIME=5
 #      - PF_AUDIOCARD=2
 #      - PF_AUDIODEVICE=0
-#      - PF_ALSA_MANUAL=ON
     tmpfs:
       - /run:rw,nosuid,nodev,exec,relatime,size=256M
       - /tmp:rw,nosuid,nodev,noexec,relatime,size=128M
+# Optional - if you map the directory below to a volume, your noise measurements will persist through restarts of the container
+    volumes:
+      - /opt/adsb/noisecapt:/run/noisecapt
