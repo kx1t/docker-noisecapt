@@ -9,11 +9,14 @@ RUN set -x && \
     TEMP_PACKAGES=() && \
     KEPT_PACKAGES=() && \
 #
-# define packages needed for noisecapt
+# define packages needed for noisecapt:
+    # JQ for JSON interpretation; lighttpd to present a website; alsa-utils to enable audio capture from soundcard
+    # sox to create spectrograms and get the RMS audio levels; lame to encode in MP3
     KEPT_PACKAGES+=(jq) && \
     KEPT_PACKAGES+=(lighttpd) && \
     KEPT_PACKAGES+=(alsa-utils) && \
     KEPT_PACKAGES+=(sox) && \
+    KEPT_PACKAGES+=(lame) && \
 #
 # Install all these packages:
     apt-get update && \

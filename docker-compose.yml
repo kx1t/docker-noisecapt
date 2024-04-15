@@ -17,8 +17,19 @@ services:
       - PF_DELETEAFTER=2
       # This defines the capure time blocks, you shpuld probably leave this alone:
       - PF_CAPTURETIME=5
-#      - PF_AUDIOCARD=2
-#      - PF_AUDIODEVICE=0
+      #- PF_AUDIOCARD=2
+      #- PF_AUDIODEVICE=0
+      #- PF_ALSA_MANUAL=ON
+      # 
+      # The following parameter configures if MP3 audio files are saved for the recordings.
+      # WARNINGS !!! Recording MP3 audio files:
+      # - takes up (a lot of) disk space
+      # - causes a lot of write IO cycles, potentially shortening the lifespan of the SD card
+      # - uses a lot of CPU, adding substantially to the system load
+      # - may be ILLEGAL in your jurisdiction or subject to notification or consent laws or regulations
+      #   Please consult with an attorney or legal professional before deploying - we disclaim any liability or responsibility.
+      # !!!! ONLY USE NOISECAPT IN COMPLIANCE WITH LAWS, BY-LAWS, AND OTHER REGULATIONS IN YOUR JURISDICTION !!!!
+      - RECORD_MP3=off
     tmpfs:
       - /run:rw,nosuid,nodev,exec,relatime,size=256M
       - /tmp:rw,nosuid,nodev,noexec,relatime,size=128M
