@@ -18,11 +18,11 @@ source /scripts/common
 # LOOPTIME is the time between two runs cleanup. In our case, daily.
 LOOPTIME="1d"
 #
-# OLDERTHAN indicates which age files can be deleted. This is in DAYS.
+# OLDERTHAN indicates which age log files can be deleted. This is in DAYS.
 # It specifically applies to files in the HTML directory.
 # If $PF_DELETEAFTER is set to "0" then we never delete.
 # Note - files in /tmp will get deleted if they are older than 2 days.
-OLDERTHAN="${PF_DELETEAFTER:-14}"
+OLDERTHAN=7
 #
 # MAXLOGLINES contains the max number of lines that we will keep in /tmp/planefence.log
 MAXLOGLINES=5000
