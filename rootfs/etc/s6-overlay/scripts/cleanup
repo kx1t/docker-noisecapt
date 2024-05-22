@@ -33,7 +33,7 @@ CLEANUP ()
   if (( OLDERTHAN > 0 ))
   then
     find /tmp -mindepth 1 -mtime +2 -delete 2>/dev/null
-    find /run/noisecapt/*.log -mtime +"$OLDERTHAN" -delete 2>/dev/null
+    find /run/noisecapt/ -name '*.log' -mtime +"$OLDERTHAN" -delete 2>/dev/null
     tail -n $MAXLOGLINES /run/noisecapt/noisecapt.log >/run/noisecapt/noisecapt.log.tmp 2>/dev/null
     mv -f /run/noisecapt/noisecapt.log.tmp /run/noisecapt/noisecapt.log 2>/dev/null
   else

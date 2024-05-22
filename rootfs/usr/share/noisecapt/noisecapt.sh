@@ -206,8 +206,8 @@ while true; do
     # LOG "ln -sf ${OUTFILE}pectro-$(date -d @"$AUDIOTIME" +%y%m%d-%H%M%S).png ${OUTFILE}/spectro-latest.png"
     # clean up any PNG spectrograms older than 12 hours (720 minutes):
     DTIME="$(( ${PF_DELETEAFTER:-1} * 60 ))"
-	find "$OUTFILE"spectro-*.png -maxdepth 1 -mmin +"$DTIME" -delete
-    find "$OUTFILE"recording-*.mp3 -maxdepth 1 -mmin +"$DTIME" -delete
+	find "${OUTFILE%/*}" -name 'noisecapt-spectro-*.png' -mmin +"$DTIME" -delete
+    find "${OUTFILE%/*}" -name 'noisecapt-recording-*.mp3' -mmin +"$DTIME" -delete
 
     # clean up log file if necessary:
     (( LOOPCOUNTER++ ))
