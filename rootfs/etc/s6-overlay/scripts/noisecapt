@@ -46,7 +46,7 @@ if ! chk_enabled "$PF_ALSA_MANUAL"; then
 		amixer -q -c "$CARD" cset numid="$numid" "$maxvolume"
 		# Last - switch the AGC off as this will mess with the audio levels
 		numid="$(amixer --card "$CARD" contents|grep 'Auto Gain Control' | sed  -n 's/numid=\([0-9]\+\).*/\1/p')"
-		amixer -q -c "$CARD" cset numid="$numid" off
+		if [[ -n "$numid" ]]; then amixer -q -c "$CARD" cset numid="$numid" off; fi
 	fi
 fi
 # -----------------------------------------------------------------------------------
