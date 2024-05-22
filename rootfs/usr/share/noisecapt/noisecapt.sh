@@ -101,7 +101,7 @@ while true; do
 
     if chk_enabled "$RECORD_MP3"; then
         RMSREC="$(arecord -D hw:"$CARD,$DEVICE" -d 5 --fatal-errors --buffer-size=192000 -f dat -t raw -c 1 --quiet 2>/dev/null \
-                  | tee >(lame --quiet -r --preset phone -s 48 -a - "${OUTFILE}recording-$(date -d @"$AUDIOTIME" +%y%m%d-%H%M%S).mp3" >/dev/null 2>&1) \
+                  | tee >(lame --quiet -r --preset phone -b 48 -a - "${OUTFILE}recording-$(date -d @"$AUDIOTIME" +%y%m%d-%H%M%S).mp3" >/dev/null 2>&1) \
                   | sox -V -t raw -b 16 -r 48000 -c 1 -e signed-integer - -n sinc 200-10000 stats rate 16000 spectrogram -o "${OUTFILE}spectro-$(date -d @"$AUDIOTIME" +%y%m%d-%H%M%S).png"  -Z -10 -z 60 -t "Audio Spectrogram for $(date -d @"$AUDIOTIME")" -c "PlaneFence (C) 2020-2024 by kx1t" -p 1 2>&1 \
                   | grep 'RMS lev dB')"
     else
