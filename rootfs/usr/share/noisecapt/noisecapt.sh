@@ -11,7 +11,7 @@ source /scripts/common
 #
 # This script is distributed as part of the PlaneFence package.
 #
-# Copyright 2020-2024 Ramon F. Kolb - licensed under the terms and conditions
+# Copyright 2020-2025 Ramon F. Kolb - licensed under the terms and conditions
 # of GPLv3. The terms and conditions of this license are included with the Github
 # distribution of this package, and are also available here:
 # https://github.com/kx1t/planefence
@@ -102,11 +102,11 @@ while true; do
     if chk_enabled "$RECORD_MP3"; then
         RMSREC="$(arecord -D hw:"$CARD,$DEVICE" -d "$CAPTURETIME" --fatal-errors --buffer-size=192000 -f dat -t raw -c 1 --quiet 2>/dev/null \
                   | tee >(lame --quiet -r --preset phone -s 48 - "${OUTFILE}recording-$(date -d @"$AUDIOTIME" +%y%m%d-%H%M%S).mp3" >/dev/null 2>&1) \
-                  | sox -V -t raw -b 16 -r 48000 -c 1 -e signed-integer - -n sinc 200-10000 stats rate 16000 spectrogram -o "${OUTFILE}spectro-$(date -d @"$AUDIOTIME" +%y%m%d-%H%M%S).png"  -Z -10 -z 60 -t "Audio Spectrogram for $(date -d @"$AUDIOTIME")" -c "PlaneFence (C) 2020-2024 by kx1t" -p 1 2>&1 \
+                  | sox -V -t raw -b 16 -r 48000 -c 1 -e signed-integer - -n sinc 200-10000 stats rate 16000 spectrogram -o "${OUTFILE}spectro-$(date -d @"$AUDIOTIME" +%y%m%d-%H%M%S).png"  -Z -10 -z 60 -t "Audio Spectrogram for $(date -d @"$AUDIOTIME")" -c "Planefence (C) 2020-2025 by kx1t" -p 1 2>&1 \
                   | grep 'RMS lev dB')"
     else
         RMSREC="$(arecord -D hw:"$CARD,$DEVICE" -d "$CAPTURETIME" --fatal-errors --buffer-size=192000 -f dat -t raw -c 1 --quiet 2>/dev/null \
-                  | sox -V -t raw -b 16 -r 48000 -c 1 -e signed-integer - -n sinc 200-10000 stats rate 16000 spectrogram -o "${OUTFILE}spectro-$(date -d @"$AUDIOTIME" +%y%m%d-%H%M%S).png"  -Z -10 -z 60 -t "Audio Spectrogram for $(date -d @"$AUDIOTIME")" -c "PlaneFence (C) 2020-2024 by kx1t" -p 1 2>&1 \
+                  | sox -V -t raw -b 16 -r 48000 -c 1 -e signed-integer - -n sinc 200-10000 stats rate 16000 spectrogram -o "${OUTFILE}spectro-$(date -d @"$AUDIOTIME" +%y%m%d-%H%M%S).png"  -Z -10 -z 60 -t "Audio Spectrogram for $(date -d @"$AUDIOTIME")" -c "Planefence (C) 2020-2025 by kx1t" -p 1 2>&1 \
                   | grep 'RMS lev dB')"
     fi
     # put the dB value into LEVEL as an integer. BASH arithmatic doesn't like
