@@ -201,9 +201,10 @@ while true; do
     # Now we have all the averages, we can write them to the file
     printf "%s,%s,%s,%s,%s,%s\n" "$AUDIOTIME" "$LEVEL" "$ONEMINAVG" "$FIVEMINAVG" "$TENMINAVG" "$ONEHRAVG" >> "$LOGTODAY"
 
-    # Link latest spectrogram to PNG file
+    # Link latest spectrogram to PNG files and recordingsto mp3 files
     ln -sf "${OUTFILE}spectro-$(date -d @"$AUDIOTIME" +%y%m%d-%H%M%S).png" "${OUTFILE}spectro-latest.png"
 	ln -sf "${OUTFILE}spectro-$(date -d @"$AUDIOTIME" +%y%m%d-%H%M%S).png" "${OUTFILE}spectro-$AUDIOTIME.png"
+    ln -sf "${OUTFILE}recording-$(date -d @"$AUDIOTIME" +%y%m%d-%H%M%S).mp3" "${OUTFILE}recording-$AUDIOTIME.mp3"
     # LOG "ln -sf ${OUTFILE}pectro-$(date -d @"$AUDIOTIME" +%y%m%d-%H%M%S).png ${OUTFILE}/spectro-latest.png"
     # clean up any PNG spectrograms older than 12 hours (720 minutes):
     DTIME="$(( ${PF_DELETEAFTER:-1} * 60 ))"
