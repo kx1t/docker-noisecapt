@@ -42,10 +42,21 @@ CLEANUP ()
 }
 #
 #Now loop forevah:
-while true
-do
-  "${s6wrap[@]}" echo "Performing a cleanup run..."
-  CLEANUP
-  "${s6wrap[@]}" echo "Cleanup done. Sleeping for $LOOPTIME"
-  sleep $LOOPTIME
-done
+{ while true; do
+    "${s6wrap[@]}" echo "Performing a cleanup run..."
+    CLEANUP
+    "${s6wrap[@]}" echo "Cleanup done. Sleeping for $LOOPTIME"
+    sleep $LOOPTIME
+  done
+} &
+
+{ while true; do
+    "${s6wrap[@]}" echo "Performing a cleanup run of png and mp3 filtes that are older than 180 minutes..."
+    find /run/noisecapt/ -type f -name '*.mp3' -mmin +180 -delete 2>/dev/null
+    find /run/noisecapt/ -type f -name '*.png' -mmin +180 -delete 2>/dev/null
+    "${s6wrap[@]}" echo "Cleanup done. Sleeping for 5 mins"
+    sleep 300
+  done
+} &
+
+wait $!
