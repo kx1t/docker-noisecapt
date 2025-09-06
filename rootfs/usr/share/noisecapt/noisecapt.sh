@@ -210,6 +210,7 @@ while true; do
     DTIME="$(( ${PF_DELETEAFTER:-1} * 60 ))"
 	find "${OUTFILE%/*}" -name 'noisecapt-spectro-*.png' -mmin +"$DTIME" -delete
     find "${OUTFILE%/*}" -name 'noisecapt-recording-*.mp3' -mmin +"$DTIME" -delete
+	ls -1 > "$(OUTFILE}dir"
 
     # clean up log file if necessary:
     (( LOOPCOUNTER++ ))
