@@ -54,7 +54,7 @@ fi
 
 while true
 do
-	"${s6wrap[@]}" $NOISECAPTDIR/noisecapt.sh >/run/noisecapt/noisecapt.log
+	"${s6wrap[@]}" $NOISECAPTDIR/noisecapt.sh
 	"${s6wrap[@]}" echo "Noisecapt has exited unexpectedly... restarting in $LOOPTIME"
 	sleep $LOOPTIME
 	"${s6wrap[@]}" echo "Noisecapt restarting now"

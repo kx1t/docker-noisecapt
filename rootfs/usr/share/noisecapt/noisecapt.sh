@@ -56,9 +56,8 @@ LOOPCOUNTER=0
 # Create an function to write to the log:
 LOG ()
 {
-    if chk_enabled "$VERBOSE";
-    then
-        "${s6wrap[@]}" echo "$1"
+    if chk_enabled "$VERBOSE"; then
+        echo "$1"
     fi
 }
 
@@ -114,8 +113,7 @@ while true; do
     LC_ALL=C printf -v LEVEL '%.0f' "${RMSREC##* }"
 
     # check if $LEVEL is less than zero. If it's zero, there was a read error and we should skip.
-    if [[ "$LEVEL" == "0" ]]
-    then
+    if [[ "$LEVEL" == "0" ]]; then
         "${s6wrap[@]}" echo "Zero sample - skipping"
         continue
     fi
@@ -123,8 +121,7 @@ while true; do
     LOG "Level=$LEVEL Audiotime=$AUDIOTIME"
     # capture and calculate the averages
     # determine the number of records in today's log
-    if [ -f "$LOGTODAY" ]
-    then
+    if [[ -f "$LOGTODAY" ]]; then
         LOGLINES="$(wc -l "$LOGTODAY")"
         LOGLINES=${LOGLINES% *}
     else
@@ -210,10 +207,12 @@ while true; do
     DTIME="$(( ${PF_DELETEAFTER:-1} * 60 ))"
 	find "${OUTFILE%/*}" -name 'noisecapt-spectro-*.png' -mmin +"$DTIME" -delete
     find "${OUTFILE%/*}" -name 'noisecapt-recording-*.mp3' -mmin +"$DTIME" -delete
-	{ ls -1 "${OUTFILE%/*}/*" | gzip - > /tmp/outdir.gz && \
- 	  mv -f /tmp/outdir.gz "${OUTFILE}dir.gz" || \
-	  rm -f /tmp/outdir.gz
-      LOG "updated ${OUTFILE}dir.gz at $(date)"
+	{ if find "${OUTFILE%/*}" -maxdepth 1 -type f -printf "%f\n" | gzip - > /tmp/outdir.gz; then 
+ 	    mv -f /tmp/outdir.gz "${OUTFILE}dir.gz"
+      else
+	    rm -f /tmp/outdir.gz
+      fi
+      # LOG "updated ${OUTFILE}dir.gz at $(date)"
      } &
 
     # clean up log file if necessary:
