@@ -211,7 +211,7 @@ while true; do
 	find "${OUTFILE%/*}" -name 'noisecapt-spectro-*.png' -mmin +"$DTIME" -delete
     find "${OUTFILE%/*}" -name 'noisecapt-recording-*.mp3' -mmin +"$DTIME" -delete
 	{ ls -1 "${OUTFILE%/*}" | gzip - > /tmp/outdir.gz && \
- 	  mv /tmp/outdir.gz "$(OUTFILE}dir.gz" || \
+ 	  mv /tmp/outdir.gz "${OUTFILE}dir.gz" || \
 	  rm -f /tmp/outdir.gz
      } &
 
