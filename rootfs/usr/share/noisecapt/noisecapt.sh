@@ -169,21 +169,21 @@ while true; do
             unset LINE
             IFS=',' read -ra LINE <<< "$ONELINE"
             if (( AUDIOTIME - LINE[0] < 3600 )); then
-                (( ONEHRCT++ ))
+                (( ONEHRCT++ )) || true
                 (( ONEHRTL += LINE[1] ))
             fi
             if (( AUDIOTIME - LINE[0] < 600 )); then
-                (( TENMINCT++ ))
+                (( TENMINCT++ )) || true
                 (( TENMINTL += LINE[1] ))
             fi
 
             if (( AUDIOTIME - LINE[0] < 300 )); then
-                (( FIVEMINCT++ ))
+                (( FIVEMINCT++ )) || true
                 (( FIVEMINTL += LINE[1] ))
             fi
 
             if (( AUDIOTIME - LINE[0] < 60 )); then
-                (( ONEMINCT++ ))
+                (( ONEMINCT++ )) || true
                 (( ONEMINTL += LINE[1] ))
             fi
 
@@ -216,7 +216,7 @@ while true; do
      } &
 
     # clean up log file if necessary:
-    (( LOOPCOUNTER++ ))
+    (( LOOPCOUNTER++ )) || true
     if (( LOOPCOUNTER > CLEANUPINT ))
     then
         LOOPCOUNTER=0
