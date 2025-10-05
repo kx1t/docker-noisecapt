@@ -207,7 +207,7 @@ while true; do
     DTIME="$(( ${PF_DELETEAFTER:-1} * 60 ))"
 	find "${OUTFILE%/*}" -name 'noisecapt-spectro-*.png' -mmin +"$DTIME" -delete
     find "${OUTFILE%/*}" -name 'noisecapt-recording-*.mp3' -mmin +"$DTIME" -delete
-	{ if find "${OUTFILE%/*}" -maxdepth 1 -type f -printf "%f\n" | gzip - > /tmp/outdir.gz; then 
+	{ if find "${OUTFILE%/*}" -maxdepth 1 -printf "%f\n" | gzip - > /tmp/outdir.gz; then 
  	    mv -f /tmp/outdir.gz "${OUTFILE}dir.gz"
       else
 	    rm -f /tmp/outdir.gz
